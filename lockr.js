@@ -1,42 +1,7 @@
-(function(root, factory) {
-
-  if (typeof exports !== 'undefined') {
-    if (typeof module !== 'undefined' && module.exports) {
-      exports = module.exports = factory(root, exports);
-    }
-  } else if (typeof define === 'function' && define.amd) {
-    define(['exports'], function(exports) {
-      root.Lockr = factory(root, exports);
-    });
-  } else {
-    root.Lockr = factory(root, {});
-  }
-
-}(this, function(root, Lockr) {
+function lockr() {
   'use strict';
 
-  if (!Array.prototype.indexOf) {
-    Array.prototype.indexOf = function(elt /*, from*/)
-    {
-      var len = this.length >>> 0;
-
-      var from = Number(arguments[1]) || 0;
-      from = (from < 0)
-      ? Math.ceil(from)
-      : Math.floor(from);
-      if (from < 0)
-        from += len;
-
-      for (; from < len; from++)
-      {
-        if (from in this &&
-            this[from] === elt)
-          return from;
-      }
-      return -1;
-    };
-  }
-
+  var Lockr = {};
   Lockr.prefix = "";
 
   Lockr._getPrefixedKey = function(key, options) {
@@ -47,7 +12,6 @@
     } else {
       return this.prefix + key;
     }
-
   };
 
   Lockr.set = function (key, value, options) {
@@ -61,17 +25,17 @@
   };
 
   Lockr.get = function (key, missing, options) {
-    var query_key = this._getPrefixedKey(key, options),
-        value;
+    var query_key = this._getPrefixedKey(key, options);
+    var value;
 
     try {
       value = JSON.parse(localStorage.getItem(query_key));
     } catch (e) {
-            if(localStorage[query_key]) {
-              value = {data: localStorage.getItem(query_key)};
-            } else{
-                value = null;
-            }
+      if(localStorage[query_key]) {
+        value = {data: localStorage.getItem(query_key)};
+      } else {
+        value = null;
+      }
     }
     
     if(!value) {
@@ -83,10 +47,9 @@
   };
 
   Lockr.sadd = function(key, value, options) {
-    var query_key = this._getPrefixedKey(key, options),
-        json;
-
+    var query_key = this._getPrefixedKey(key, options);
     var values = Lockr.smembers(key);
+    var json;
 
     if (values.indexOf(value) > -1) {
       return null;
@@ -98,13 +61,13 @@
       localStorage.setItem(query_key, json);
     } catch (e) {
       console.log(e);
-      if (console) console.warn("Lockr didn't successfully add the "+ value +" to "+ key +" set, because the localStorage is full.");
+      console.warn("Lockr didn't successfully add the "+ value +" to "+ key +" set, because the localStorage is full.");
     }
   };
 
   Lockr.smembers = function(key, options) {
-    var query_key = this._getPrefixedKey(key, options),
-        value;
+    var query_key = this._getPrefixedKey(key, options);
+    var value;
 
     try {
       value = JSON.parse(localStorage.getItem(query_key));
@@ -128,7 +91,7 @@
     }
 
     allKeys.forEach(function (key) {
-      if (key.indexOf(Lockr.prefix) !== -1) {
+      if (key.indexOf(Lockr.prefix) > -1) {
         keys.push(key.replace(Lockr.prefix, ''));
       }
     });
@@ -154,13 +117,10 @@
   };
 
   Lockr.srem = function(key, value, options) {
-    var query_key = this._getPrefixedKey(key, options),
-        json,
-        index;
-
+    var query_key = this._getPrefixedKey(key, options);
     var values = Lockr.smembers(key, value);
-
-    index = values.indexOf(value);
+    var index = values.indexOf(value);
+    var json;
 
     if (index > -1)
       values.splice(index, 1);
@@ -176,7 +136,6 @@
 
   Lockr.rm =  function (key) {
     var queryKey = this._getPrefixedKey(key);
-    
     localStorage.removeItem(queryKey);
   };
 
@@ -189,6 +148,8 @@
       localStorage.clear();
     }
   };
-  return Lockr;
 
-}));
+  return Lockr;
+}
+
+module.exports = lockr;
