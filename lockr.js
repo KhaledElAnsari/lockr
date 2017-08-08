@@ -1,10 +1,10 @@
-function lockr() {
+var Lockr = (function() {
   'use strict';
 
-  var Lockr = {};
-  Lockr.prefix = "";
+  var lockObj = {};
+  lockObj.prefix = "";
 
-  Lockr._getPrefixedKey = function(key, options) {
+  lockObj._getPrefixedKey = function(key, options) {
     options = options || {};
 
     if (options.noPrefix) {
@@ -14,17 +14,17 @@ function lockr() {
     }
   };
 
-  Lockr.set = function (key, value, options) {
+  lockObj.set = function (key, value, options) {
     var query_key = this._getPrefixedKey(key, options);
 
     try {
       localStorage.setItem(query_key, JSON.stringify({"data": value}));
     } catch (e) {
-      if (console) console.warn("Lockr didn't successfully save the '{"+ key +": "+ value +"}' pair, because the localStorage is full.");
+      if (console) console.warn("lockObj didn't successfully save the '{"+ key +": "+ value +"}' pair, because the localStorage is full.");
     }
   };
 
-  Lockr.get = function (key, missing, options) {
+  lockObj.get = function (key, missing, options) {
     var query_key = this._getPrefixedKey(key, options);
     var value;
 
@@ -46,9 +46,9 @@ function lockr() {
     }
   };
 
-  Lockr.sadd = function(key, value, options) {
+  lockObj.sadd = function(key, value, options) {
     var query_key = this._getPrefixedKey(key, options);
-    var values = Lockr.smembers(key);
+    var values = lockObj.smembers(key);
     var json;
 
     if (values.indexOf(value) > -1) {
@@ -61,11 +61,11 @@ function lockr() {
       localStorage.setItem(query_key, json);
     } catch (e) {
       console.log(e);
-      console.warn("Lockr didn't successfully add the "+ value +" to "+ key +" set, because the localStorage is full.");
+      console.warn("lockObj didn't successfully add the "+ value +" to "+ key +" set, because the localStorage is full.");
     }
   };
 
-  Lockr.smembers = function(key, options) {
+  lockObj.smembers = function(key, options) {
     var query_key = this._getPrefixedKey(key, options);
     var value;
 
@@ -78,47 +78,47 @@ function lockr() {
     return (value && value.data) ? value.data : [];
   };
 
-  Lockr.sismember = function(key, value, options) {
-    return Lockr.smembers(key).indexOf(value) > -1;
+  lockObj.sismember = function(key, value, options) {
+    return lockObj.smembers(key).indexOf(value) > -1;
   };
 
-  Lockr.keys = function() {
+  lockObj.keys = function() {
     var keys = [];
     var allKeys = Object.keys(localStorage);
 
-    if (Lockr.prefix.length === 0) {
+    if (lockObj.prefix.length === 0) {
       return allKeys;
     }
 
     allKeys.forEach(function (key) {
-      if (key.indexOf(Lockr.prefix) > -1) {
-        keys.push(key.replace(Lockr.prefix, ''));
+      if (key.indexOf(lockObj.prefix) > -1) {
+        keys.push(key.replace(lockObj.prefix, ''));
       }
     });
 
     return keys;
   };
 
-  Lockr.getAll = function (includeKeys) {
-    var keys = Lockr.keys();
+  lockObj.getAll = function (includeKeys) {
+    var keys = lockObj.keys();
 
     if (includeKeys) {
       return keys.reduce(function (accum, key) {
         var tempObj = {};
-        tempObj[key] = Lockr.get(key);
+        tempObj[key] = lockObj.get(key);
         accum.push(tempObj);
         return accum;
       }, []);
     }
 
     return keys.map(function (key) {
-      return Lockr.get(key);
+      return lockObj.get(key);
     });
   };
 
-  Lockr.srem = function(key, value, options) {
+  lockObj.srem = function(key, value, options) {
     var query_key = this._getPrefixedKey(key, options);
-    var values = Lockr.smembers(key, value);
+    var values = lockObj.smembers(key, value);
     var index = values.indexOf(value);
     var json;
 
@@ -130,26 +130,31 @@ function lockr() {
     try {
       localStorage.setItem(query_key, json);
     } catch (e) {
-      if (console) console.warn("Lockr couldn't remove the "+ value +" from the set "+ key);
+      if (console) console.warn("lockObj couldn't remove the "+ value +" from the set "+ key);
     }
   };
 
-  Lockr.rm =  function (key) {
+  lockObj.rm =  function (key) {
     var queryKey = this._getPrefixedKey(key);
     localStorage.removeItem(queryKey);
   };
 
-  Lockr.flush = function () {
-    if (Lockr.prefix.length) {
-      Lockr.keys().forEach(function(key) {
-        localStorage.removeItem(Lockr._getPrefixedKey(key));
+  lockObj.flush = function () {
+    if (lockObj.prefix.length) {
+      lockObj.keys().forEach(function(key) {
+        localStorage.removeItem(lockObj._getPrefixedKey(key));
       });
     } else {
       localStorage.clear();
     }
   };
 
-  return Lockr;
-}
+  return lockObj;
+})();
 
-module.exports = lockr;
+if (typeof exports !== 'undefined') {
+  if (typeof module !== 'undefined' && module.exports) {
+    exports = module.exports = Lockr;
+  }
+  exports.Lockr = Lockr;
+}
